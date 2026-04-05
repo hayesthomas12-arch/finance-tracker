@@ -1,0 +1,1119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Finance Tracker</title>
+  <meta name="description" content="Personal finance tracker — savings, spending, debts, and goals.">
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#1D9E75">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Finance">
+  <style>
+    :root {
+      --bg-primary: #ffffff;
+      --bg-secondary: #f5f5f4;
+      --bg-tertiary: #fafaf9;
+      --text-primary: #1c1c1a;
+      --text-secondary: #6b6b67;
+      --text-tertiary: #a8a8a3;
+      --border-light: rgba(0,0,0,0.08);
+      --border-mid: rgba(0,0,0,0.14);
+      --border-strong: rgba(0,0,0,0.22);
+      --radius-md: 8px;
+      --radius-lg: 12px;
+      --radius-xl: 16px;
+      --green: #1D9E75;
+      --green-dark: #0F6E56;
+      --green-bg: #E1F5EE;
+      --green-text: #0F6E56;
+      --red: #D85A30;
+      --red-bg: #FCEBEB;
+      --red-text: #A32D2D;
+      --blue: #378ADD;
+      --blue-bg: #E6F1FB;
+      --blue-text: #185FA5;
+      --amber: #EF9F27;
+      --amber-bg: #FAEEDA;
+      --amber-text: #854F0B;
+      --gray-bg: #F1EFE8;
+      --gray-text: #444441;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg-primary: #1c1c1a;
+        --bg-secondary: #2a2a28;
+        --bg-tertiary: #242422;
+        --text-primary: #f0efec;
+        --text-secondary: #a8a8a3;
+        --text-tertiary: #6b6b67;
+        --border-light: rgba(255,255,255,0.07);
+        --border-mid: rgba(255,255,255,0.12);
+        --border-strong: rgba(255,255,255,0.2);
+        --green-bg: #04342C;
+        --green-text: #9FE1CB;
+        --red-bg: #501313;
+        --red-text: #F09595;
+        --blue-bg: #042C53;
+        --blue-text: #85B7EB;
+        --amber-bg: #412402;
+        --amber-text: #FAC775;
+        --gray-bg: #2C2C2A;
+        --gray-text: #D3D1C7;
+      }
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+      background: var(--bg-tertiary);
+      color: var(--text-primary);
+      min-height: 100vh;
+      font-size: 15px;
+      line-height: 1.5;
+    }
+
+    .shell {
+      max-width: 780px;
+      margin: 0 auto;
+      padding: 0 16px 80px;
+    }
+
+    /* ── Header ── */
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 20px 0 16px;
+      border-bottom: 0.5px solid var(--border-light);
+      margin-bottom: 24px;
+    }
+    .header-left h1 {
+      font-size: 20px;
+      font-weight: 600;
+      color: var(--text-primary);
+      letter-spacing: -0.3px;
+    }
+    .header-left .subtitle {
+      font-size: 12px;
+      color: var(--text-tertiary);
+      margin-top: 1px;
+    }
+    .header-right { display: flex; gap: 8px; align-items: center; }
+
+    /* ── Nav tabs ── */
+    .nav-pill {
+      display: flex;
+      gap: 3px;
+      background: var(--bg-secondary);
+      padding: 3px;
+      border-radius: var(--radius-xl);
+      border: 0.5px solid var(--border-light);
+      margin-bottom: 24px;
+      overflow-x: auto;
+    }
+    .nb {
+      flex: 1;
+      padding: 7px 12px;
+      border-radius: var(--radius-lg);
+      border: none;
+      background: transparent;
+      color: var(--text-secondary);
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.15s;
+      font-family: inherit;
+    }
+    .nb:hover { color: var(--text-primary); }
+    .nb.active {
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      border: 0.5px solid var(--border-mid);
+    }
+
+    /* ── Icon button ── */
+    .icon-btn {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 7px 12px;
+      border-radius: var(--radius-md);
+      border: 0.5px solid var(--border-mid);
+      background: var(--bg-primary);
+      color: var(--text-secondary);
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      font-family: inherit;
+      transition: all 0.12s;
+    }
+    .icon-btn:hover { background: var(--bg-secondary); color: var(--text-primary); }
+
+    /* ── Pages ── */
+    .page { display: none; }
+    .page.active { display: block; }
+
+    /* ── Metric grid ── */
+    .mg {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+    .mc {
+      background: var(--bg-primary);
+      border: 0.5px solid var(--border-light);
+      border-radius: var(--radius-lg);
+      padding: 14px 16px;
+    }
+    .mc-label {
+      font-size: 11px;
+      color: var(--text-tertiary);
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      margin-bottom: 6px;
+      font-weight: 500;
+    }
+    .mc-val { font-size: 22px; font-weight: 600; color: var(--text-primary); line-height: 1.1; }
+    .mc-sub { font-size: 11px; color: var(--text-tertiary); margin-top: 4px; }
+    .cg { color: var(--green); }
+    .cr { color: var(--red); }
+    .cb { color: var(--blue); }
+    .ca { color: var(--amber); }
+
+    /* ── Cards ── */
+    .card {
+      background: var(--bg-primary);
+      border: 0.5px solid var(--border-light);
+      border-radius: var(--radius-xl);
+      padding: 20px;
+      margin-bottom: 14px;
+    }
+    .card-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+    .card-title { font-size: 15px; font-weight: 600; color: var(--text-primary); }
+    .card-sub { font-size: 12px; color: var(--text-tertiary); }
+
+    /* ── Rows inside cards ── */
+    .item-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 11px 0;
+      border-bottom: 0.5px solid var(--border-light);
+    }
+    .item-row:last-child { border-bottom: none; padding-bottom: 0; }
+    .item-row:first-child { padding-top: 0; }
+    .item-left { display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1; }
+    .item-name {
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--text-primary);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .item-sub { font-size: 12px; color: var(--text-tertiary); }
+    .item-right { display: flex; align-items: center; gap: 10px; flex-shrink: 0; padding-left: 12px; }
+
+    /* ── Progress bars ── */
+    .bar {
+      height: 6px;
+      background: var(--bg-secondary);
+      border-radius: 3px;
+      overflow: hidden;
+      margin: 5px 0 3px;
+    }
+    .bar-fill { height: 100%; border-radius: 3px; transition: width 0.5s ease; }
+    .bfg { background: var(--green); }
+    .bfb { background: var(--blue); }
+    .bfa { background: var(--amber); }
+    .bfc { background: var(--red); }
+    .bar-thick { height: 10px; border-radius: 5px; margin-bottom: 5px; }
+    .prog-labels {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+      color: var(--text-tertiary);
+      margin-bottom: 12px;
+    }
+
+    /* ── Badges ── */
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 3px 9px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 600;
+      white-space: nowrap;
+      letter-spacing: 0.02em;
+    }
+    .bi { background: var(--green-bg); color: var(--green-text); }
+    .be { background: var(--gray-bg); color: var(--gray-text); }
+    .bd { background: var(--red-bg); color: var(--red-text); }
+    .bgoal { background: var(--blue-bg); color: var(--blue-text); }
+
+    /* ── Tag chips ── */
+    .tag { display: inline-block; padding: 3px 9px; border-radius: 999px; font-size: 11px; font-weight: 600; }
+    .tag-good { background: var(--green-bg); color: var(--green-text); }
+    .tag-warn { background: var(--amber-bg); color: var(--amber-text); }
+    .tag-bad { background: var(--red-bg); color: var(--red-text); }
+
+    /* ── Transaction table ── */
+    .tx-wrap { overflow-x: auto; }
+    .tx-table { width: 100%; border-collapse: collapse; font-size: 13px; min-width: 420px; }
+    .tx-table th {
+      text-align: left;
+      color: var(--text-tertiary);
+      font-weight: 500;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      padding: 0 0 10px;
+      border-bottom: 0.5px solid var(--border-mid);
+    }
+    .tx-table td {
+      padding: 10px 8px 10px 0;
+      border-bottom: 0.5px solid var(--border-light);
+      color: var(--text-primary);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      vertical-align: middle;
+      max-width: 0;
+    }
+    .tx-table tr:last-child td { border-bottom: none; }
+    .tx-table .col-desc { width: 32%; }
+    .tx-table .col-type { width: 17%; }
+    .tx-table .col-cat { width: 26%; }
+    .tx-table .col-amt { width: 18%; }
+    .tx-table .col-del { width: 7%; }
+    .ap { color: var(--green); font-weight: 600; }
+    .an { color: var(--red); font-weight: 600; }
+
+    /* ── Forms ── */
+    .form-section { margin-bottom: 0; }
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 14px; }
+    .form-full { grid-column: 1 / -1; }
+    .field { display: flex; flex-direction: column; gap: 6px; }
+    .field label { font-size: 12px; color: var(--text-secondary); font-weight: 600; letter-spacing: 0.02em; }
+    .field input, .field select {
+      padding: 9px 12px;
+      font-size: 14px;
+      border-radius: var(--radius-md);
+      border: 0.5px solid var(--border-mid);
+      background: var(--bg-secondary);
+      color: var(--text-primary);
+      width: 100%;
+      font-family: inherit;
+      transition: border-color 0.12s;
+      -webkit-appearance: none;
+    }
+    .field input:focus, .field select:focus {
+      outline: none;
+      border-color: var(--green);
+      background: var(--bg-primary);
+    }
+    .field input::placeholder { color: var(--text-tertiary); }
+
+    .btn-primary {
+      padding: 11px 18px;
+      font-size: 14px;
+      background: var(--green);
+      border: none;
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      color: #fff;
+      font-weight: 600;
+      font-family: inherit;
+      width: 100%;
+      transition: background 0.12s;
+      letter-spacing: 0.01em;
+    }
+    .btn-primary:hover { background: var(--green-dark); }
+    .btn-primary:active { transform: scale(0.99); }
+
+    .btn-del {
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: var(--text-tertiary);
+      font-size: 16px;
+      padding: 4px 6px;
+      border-radius: var(--radius-md);
+      line-height: 1;
+      font-family: inherit;
+      transition: all 0.12s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 28px;
+      height: 28px;
+    }
+    .btn-del:hover { color: var(--red); background: var(--red-bg); }
+
+    /* ── Detail stat grid ── */
+    .detail-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+      gap: 8px;
+      margin-top: 14px;
+    }
+    .dc {
+      background: var(--bg-secondary);
+      border-radius: var(--radius-md);
+      padding: 10px 12px;
+    }
+    .dc-label { font-size: 11px; color: var(--text-tertiary); margin-bottom: 3px; font-weight: 500; }
+    .dc-val { font-size: 15px; font-weight: 600; color: var(--text-primary); }
+
+    /* ── Settings panel ── */
+    .settings-wrap {
+      background: var(--bg-primary);
+      border: 0.5px solid var(--border-mid);
+      border-radius: var(--radius-xl);
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+    .settings-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .setting-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 0;
+      border-bottom: 0.5px solid var(--border-light);
+      gap: 16px;
+    }
+    .setting-row:last-child { border-bottom: none; padding-bottom: 0; }
+    .setting-row:first-child { padding-top: 0; }
+    .setting-info { display: flex; flex-direction: column; gap: 2px; flex: 1; }
+    .setting-label { font-size: 14px; color: var(--text-primary); font-weight: 500; }
+    .setting-sub { font-size: 12px; color: var(--text-tertiary); }
+    .setting-control input, .setting-control select {
+      padding: 7px 10px;
+      font-size: 13px;
+      border-radius: var(--radius-md);
+      border: 0.5px solid var(--border-mid);
+      background: var(--bg-secondary);
+      color: var(--text-primary);
+      font-family: inherit;
+      -webkit-appearance: none;
+    }
+    .setting-control input:focus, .setting-control select:focus {
+      outline: none;
+      border-color: var(--green);
+    }
+
+    /* ── Toggle ── */
+    .tog {
+      width: 42px;
+      height: 24px;
+      border-radius: 12px;
+      background: var(--bg-secondary);
+      border: 0.5px solid var(--border-mid);
+      position: relative;
+      cursor: pointer;
+      transition: background 0.2s, border-color 0.2s;
+      flex-shrink: 0;
+    }
+    .tog.on { background: var(--green); border-color: var(--green); }
+    .tok {
+      position: absolute;
+      top: 3px;
+      left: 3px;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: #fff;
+      transition: left 0.18s;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+    }
+    .tog.on .tok { left: 21px; }
+
+    /* ── Donut chart ── */
+    .donut-row { display: flex; align-items: center; gap: 24px; }
+    .leg { display: flex; flex-direction: column; gap: 9px; flex: 1; }
+    .leg-item { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text-secondary); }
+    .leg-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+    .leg-pct { margin-left: auto; font-weight: 600; color: var(--text-primary); font-size: 13px; }
+
+    /* ── Layout helpers ── */
+    .two-col { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 14px; }
+    .section-head {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-tertiary);
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      margin: 24px 0 10px;
+    }
+    .empty-state {
+      text-align: center;
+      padding: 28px 16px;
+      color: var(--text-tertiary);
+      font-size: 14px;
+      line-height: 1.6;
+    }
+    .empty-state strong { display: block; font-size: 15px; color: var(--text-secondary); margin-bottom: 4px; }
+
+    /* ── Save indicator ── */
+    .save-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--green);
+      display: none;
+      flex-shrink: 0;
+    }
+    .save-dot.show { display: block; }
+
+    /* ── Mobile tweaks ── */
+    @media (max-width: 500px) {
+      .form-grid { grid-template-columns: 1fr; }
+      .form-full { grid-column: 1; }
+      .mg { grid-template-columns: repeat(2, 1fr); }
+      .header-left h1 { font-size: 17px; }
+    }
+  </style>
+</head>
+<body>
+<div class="shell">
+
+  <!-- Header -->
+  <div class="header">
+    <div class="header-left">
+      <h1 id="app-title">Finance Tracker</h1>
+      <div class="subtitle" id="app-subtitle">Your money, at a glance</div>
+    </div>
+    <div class="header-right">
+      <div class="save-dot" id="save-dot" title="Saved"></div>
+      <button class="icon-btn" onclick="toggleSettings()">
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+          <circle cx="8" cy="8" r="2.2"/>
+          <path d="M8 1.5v1.2M8 13.3v1.2M1.5 8h1.2M13.3 8h1.2M3.4 3.4l.85.85M11.75 11.75l.85.85M3.4 12.6l.85-.85M11.75 4.25l.85-.85"/>
+        </svg>
+        Settings
+      </button>
+    </div>
+  </div>
+
+  <!-- Settings -->
+  <div id="settings-panel" style="display:none">
+    <div class="settings-wrap">
+      <div class="settings-title">
+        Settings
+        <button class="btn-del" onclick="toggleSettings()">✕</button>
+      </div>
+      <div class="setting-row">
+        <div class="setting-info"><div class="setting-label">Currency symbol</div></div>
+        <div class="setting-control"><input id="cfg-cur" value="$" style="width:52px;text-align:center" oninput="saveSettings();render()"></div>
+      </div>
+      <div class="setting-row">
+        <div class="setting-info"><div class="setting-label">Your name</div><div class="setting-sub">Shown as a greeting on home</div></div>
+        <div class="setting-control"><input id="cfg-name" placeholder="Optional" style="width:150px" oninput="saveSettings();render()"></div>
+      </div>
+      <div class="setting-row">
+        <div class="setting-info"><div class="setting-label">Monthly income</div><div class="setting-sub">Used to calculate savings rate</div></div>
+        <div class="setting-control"><input id="cfg-budget" type="number" value="3500" style="width:110px" oninput="saveSettings();render()"></div>
+      </div>
+      <div class="setting-row">
+        <div class="setting-info"><div class="setting-label">Show savings rate</div><div class="setting-sub">Income minus all outgoing ÷ income</div></div>
+        <div class="tog on" id="tog-sr" onclick="togClick('tog-sr')"><div class="tok"></div></div>
+      </div>
+      <div class="setting-row">
+        <div class="setting-info"><div class="setting-label">Show spending chart</div></div>
+        <div class="tog on" id="tog-ch" onclick="togClick('tog-ch')"><div class="tok"></div></div>
+      </div>
+      <div class="setting-row">
+        <div class="setting-info"><div class="setting-label">Show debts on home</div></div>
+        <div class="tog on" id="tog-dh" onclick="togClick('tog-dh')"><div class="tok"></div></div>
+      </div>
+      <div class="setting-row">
+        <div class="setting-info"><div class="setting-label">Show goals on home</div></div>
+        <div class="tog on" id="tog-gh" onclick="togClick('tog-gh')"><div class="tok"></div></div>
+      </div>
+      <div class="setting-row">
+        <div class="setting-info"><div class="setting-label">Goal bar color</div></div>
+        <div class="setting-control">
+          <select id="cfg-gc" onchange="saveSettings();render()">
+            <option value="b">Blue</option>
+            <option value="g">Green</option>
+            <option value="a">Amber</option>
+            <option value="c">Coral</option>
+          </select>
+        </div>
+      </div>
+      <div class="setting-row">
+        <div class="setting-info"><div class="setting-label">Clear all data</div><div class="setting-sub">Permanently deletes everything</div></div>
+        <div class="setting-control"><button class="btn-del" onclick="clearAllData()" style="color:var(--red);width:auto;font-size:13px;font-weight:600;padding:6px 12px;border:0.5px solid var(--red);border-radius:var(--radius-md)">Clear</button></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Nav -->
+  <div class="nav-pill">
+    <button class="nb active" onclick="go('home',this)">Home</button>
+    <button class="nb" onclick="go('tx',this)">Transactions</button>
+    <button class="nb" onclick="go('debts',this)">Debts</button>
+    <button class="nb" onclick="go('goals',this)">Goals</button>
+  </div>
+
+  <!-- HOME -->
+  <div class="page active" id="page-home">
+    <div id="h-greeting"></div>
+    <div class="mg" id="h-metrics"></div>
+    <div id="h-body"></div>
+  </div>
+
+  <!-- TRANSACTIONS -->
+  <div class="page" id="page-tx">
+    <div class="mg" id="tx-metrics"></div>
+    <div class="card">
+      <div class="card-head"><div class="card-title">Add transaction</div></div>
+      <div class="form-grid">
+        <div class="field form-full">
+          <label>Description</label>
+          <input id="t-desc" placeholder="e.g. Paycheck, Rent, Loan payment…">
+        </div>
+        <div class="field">
+          <label>Type</label>
+          <select id="t-type" onchange="updateCats()">
+            <option value="income">Income</option>
+            <option value="expense">Expense</option>
+            <option value="debt">Pay a debt</option>
+            <option value="goal">Fund a goal</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Category</label>
+          <select id="t-cat"></select>
+        </div>
+        <div class="field form-full">
+          <label>Amount (always enter a positive number)</label>
+          <input id="t-amt" type="number" min="0" step="0.01" placeholder="e.g. 250">
+        </div>
+      </div>
+      <button class="btn-primary" onclick="addTx()">Add transaction</button>
+    </div>
+    <div class="card">
+      <div class="card-head">
+        <div class="card-title">Transaction history</div>
+        <div class="card-sub" id="tx-count"></div>
+      </div>
+      <div class="tx-wrap">
+        <table class="tx-table">
+          <thead>
+            <tr>
+              <th class="col-desc">Description</th>
+              <th class="col-type">Type</th>
+              <th class="col-cat">Category</th>
+              <th class="col-amt">Amount</th>
+              <th class="col-del"></th>
+            </tr>
+          </thead>
+          <tbody id="tx-body"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- DEBTS -->
+  <div class="page" id="page-debts">
+    <div class="mg" id="d-metrics"></div>
+    <div id="d-cards"></div>
+    <div class="section-head">Add a debt</div>
+    <div class="card">
+      <div class="form-grid">
+        <div class="field form-full"><label>Debt name</label><input id="d-name" placeholder="e.g. Student Loan, Credit Card…"></div>
+        <div class="field"><label>Original amount</label><input id="d-total" type="number" min="0" step="0.01" placeholder="Total borrowed"></div>
+        <div class="field"><label>Remaining balance</label><input id="d-rem" type="number" min="0" step="0.01" placeholder="What's left to pay"></div>
+      </div>
+      <button class="btn-primary" onclick="addDebt()">Add debt</button>
+    </div>
+  </div>
+
+  <!-- GOALS -->
+  <div class="page" id="page-goals">
+    <div class="mg" id="g-metrics"></div>
+    <div id="g-cards"></div>
+    <div class="section-head">Add a goal</div>
+    <div class="card">
+      <div class="form-grid">
+        <div class="field form-full"><label>Goal name</label><input id="g-name" placeholder="e.g. Vacation, Emergency Fund…"></div>
+        <div class="field"><label>Target amount</label><input id="g-target" type="number" min="0" step="0.01" placeholder="How much do you need?"></div>
+        <div class="field"><label>Already saved</label><input id="g-saved" type="number" min="0" step="0.01" placeholder="0"></div>
+      </div>
+      <button class="btn-primary" onclick="addGoal()">Add goal</button>
+    </div>
+  </div>
+
+</div><!-- /shell -->
+
+<script>
+// ── State ──────────────────────────────────────────────
+let nid = 100;
+let S = { tx: [], debt: [], goals: [] };
+let CFG = {
+  cur: '$', name: '', budget: 3500,
+  togSr: true, togCh: true, togDh: true, togGh: true, goalColor: 'b'
+};
+
+// ── localStorage ───────────────────────────────────────
+function saveData() {
+  try {
+    localStorage.setItem('ft_state', JSON.stringify(S));
+    localStorage.setItem('ft_nid', nid);
+    flashSave();
+  } catch(e) {}
+}
+
+function saveCfg() {
+  try { localStorage.setItem('ft_cfg', JSON.stringify(CFG)); } catch(e) {}
+}
+
+function loadData() {
+  try {
+    const s = localStorage.getItem('ft_state');
+    const n = localStorage.getItem('ft_nid');
+    const c = localStorage.getItem('ft_cfg');
+    if (s) S = JSON.parse(s);
+    if (n) nid = parseInt(n);
+    if (c) CFG = { ...CFG, ...JSON.parse(c) };
+  } catch(e) {}
+}
+
+function flashSave() {
+  const dot = el('save-dot');
+  dot.classList.add('show');
+  clearTimeout(dot._t);
+  dot._t = setTimeout(() => dot.classList.remove('show'), 1200);
+}
+
+function saveSettings() {
+  CFG.cur = elVal('cfg-cur') || '$';
+  CFG.name = elVal('cfg-name');
+  CFG.budget = parseFloat(elVal('cfg-budget')) || 3500;
+  CFG.goalColor = elVal('cfg-gc') || 'b';
+  saveCfg();
+}
+
+function clearAllData() {
+  if (!confirm('Delete all transactions, debts, and goals? This cannot be undone.')) return;
+  S = { tx: [], debt: [], goals: [] };
+  nid = 100;
+  saveData();
+  updateCats();
+  render();
+}
+
+// ── Helpers ────────────────────────────────────────────
+function el(id) { return document.getElementById(id); }
+function elVal(id) { return el(id)?.value || ''; }
+function togOn(id) { return CFG['tog' + id.replace('tog-','').replace(/-([a-z])/g, (_,c) => c.toUpperCase())] ?? true; }
+function sym() { return CFG.cur || '$'; }
+
+function fmt(n) {
+  return sym() + Math.abs(n).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+}
+function pct(a, b) { return b === 0 ? 0 : Math.min(100, Math.round(a / b * 100)); }
+
+function goalBarClass() {
+  return { b:'bfb', g:'bfg', a:'bfa', c:'bfc' }[CFG.goalColor] || 'bfb';
+}
+function goalTextClass() {
+  return { b:'cb', g:'cg', a:'ca', c:'cr' }[CFG.goalColor] || 'cb';
+}
+
+// ── Navigation ─────────────────────────────────────────
+function go(name, btn) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nb').forEach(b => b.classList.remove('active'));
+  el('page-' + name).classList.add('active');
+  if (btn) btn.classList.add('active');
+  render();
+}
+
+function toggleSettings() {
+  const p = el('settings-panel');
+  const isOpen = p.style.display !== 'none';
+  p.style.display = isOpen ? 'none' : 'block';
+  if (!isOpen) syncSettingsUI();
+}
+
+function syncSettingsUI() {
+  el('cfg-cur').value = CFG.cur;
+  el('cfg-name').value = CFG.name;
+  el('cfg-budget').value = CFG.budget;
+  el('cfg-gc').value = CFG.goalColor;
+  setTog('tog-sr', CFG.togSr);
+  setTog('tog-ch', CFG.togCh);
+  setTog('tog-dh', CFG.togDh);
+  setTog('tog-gh', CFG.togGh);
+}
+
+function setTog(id, val) {
+  const el2 = el(id);
+  if (val) el2.classList.add('on');
+  else el2.classList.remove('on');
+}
+
+function togClick(id) {
+  el(id).classList.toggle('on');
+  const on = el(id).classList.contains('on');
+  const map = { 'tog-sr': 'togSr', 'tog-ch': 'togCh', 'tog-dh': 'togDh', 'tog-gh': 'togGh' };
+  if (map[id]) CFG[map[id]] = on;
+  saveCfg();
+  render();
+}
+
+// ── Category options ───────────────────────────────────
+function updateCats() {
+  const type = elVal('t-type');
+  const sel = el('t-cat');
+  sel.innerHTML = '';
+  if (type === 'income') {
+    sel.innerHTML = '<option value="income">Income</option>';
+  } else if (type === 'expense') {
+    sel.innerHTML = '<option value="expense">General expense</option>';
+  } else if (type === 'debt') {
+    if (!S.debt.length) { sel.innerHTML = '<option>No debts added yet</option>'; return; }
+    S.debt.forEach(d => sel.innerHTML += `<option value="${d.id}">${d.name}</option>`);
+  } else {
+    if (!S.goals.length) { sel.innerHTML = '<option>No goals added yet</option>'; return; }
+    S.goals.forEach(g => sel.innerHTML += `<option value="${g.id}">${g.name}</option>`);
+  }
+}
+
+// ── Add / delete transactions ──────────────────────────
+function addTx() {
+  const desc = el('t-desc').value.trim();
+  const type = elVal('t-type');
+  const catSel = el('t-cat');
+  const catId = catSel.value;
+  const catName = catSel.options[catSel.selectedIndex]?.text || catId;
+  const amt = parseFloat(el('t-amt').value);
+
+  if (!desc) { alert('Please enter a description.'); return; }
+  if (isNaN(amt) || amt <= 0) { alert('Please enter a positive amount.'); return; }
+  if (type === 'debt' && !S.debt.length) { alert('Add a debt first on the Debts tab.'); return; }
+  if (type === 'goal' && !S.goals.length) { alert('Add a goal first on the Goals tab.'); return; }
+
+  const finalAmt = type === 'income' ? amt : -amt;
+  let tid = null;
+
+  if (type === 'debt') {
+    tid = parseInt(catId);
+    const d = S.debt.find(x => x.id === tid);
+    if (d) d.rem = Math.max(0, parseFloat((d.rem - amt).toFixed(2)));
+  }
+  if (type === 'goal') {
+    tid = parseInt(catId);
+    const g = S.goals.find(x => x.id === tid);
+    if (g) g.saved = Math.min(g.target, parseFloat((g.saved + amt).toFixed(2)));
+  }
+
+  const displayCat = (type === 'debt' || type === 'goal') ? catName
+    : type === 'income' ? 'Income' : 'Expense';
+
+  S.tx.push({ id: nid++, desc, type, cat: displayCat, amt: finalAmt, tid, date: Date.now() });
+  el('t-desc').value = '';
+  el('t-amt').value = '';
+  saveData();
+  render();
+}
+
+function delTx(id) {
+  const tx = S.tx.find(x => x.id === id);
+  if (tx) {
+    if (tx.type === 'debt' && tx.tid != null) {
+      const d = S.debt.find(x => x.id === tx.tid);
+      if (d) d.rem = Math.min(d.total, parseFloat((d.rem + Math.abs(tx.amt)).toFixed(2)));
+    }
+    if (tx.type === 'goal' && tx.tid != null) {
+      const g = S.goals.find(x => x.id === tx.tid);
+      if (g) g.saved = Math.max(0, parseFloat((g.saved - Math.abs(tx.amt)).toFixed(2)));
+    }
+  }
+  S.tx = S.tx.filter(x => x.id !== id);
+  saveData();
+  render();
+}
+
+// ── Debts ──────────────────────────────────────────────
+function addDebt() {
+  const name = el('d-name').value.trim();
+  const total = parseFloat(el('d-total').value);
+  const rem = parseFloat(el('d-rem').value);
+  if (!name) { alert('Please enter a debt name.'); return; }
+  if (isNaN(total) || total <= 0) { alert('Please enter a valid original amount.'); return; }
+  if (isNaN(rem) || rem < 0) { alert('Please enter a valid remaining balance.'); return; }
+  if (rem > total) { alert('Remaining balance can\'t exceed the original amount.'); return; }
+  S.debt.push({ id: nid++, name, total, rem });
+  ['d-name','d-total','d-rem'].forEach(i => el(i).value = '');
+  saveData();
+  updateCats();
+  render();
+}
+
+function delDebt(id) {
+  if (!confirm('Delete this debt? Logged payments won\'t be affected.')) return;
+  S.debt = S.debt.filter(d => d.id !== id);
+  saveData();
+  updateCats();
+  render();
+}
+
+// ── Goals ──────────────────────────────────────────────
+function addGoal() {
+  const name = el('g-name').value.trim();
+  const target = parseFloat(el('g-target').value);
+  const saved = parseFloat(el('g-saved').value) || 0;
+  if (!name) { alert('Please enter a goal name.'); return; }
+  if (isNaN(target) || target <= 0) { alert('Please enter a valid target amount.'); return; }
+  if (saved > target) { alert('Amount already saved can\'t exceed the target.'); return; }
+  S.goals.push({ id: nid++, name, target, saved });
+  ['g-name','g-target','g-saved'].forEach(i => el(i).value = '');
+  saveData();
+  updateCats();
+  render();
+}
+
+function delGoal(id) {
+  if (!confirm('Delete this goal? Logged contributions won\'t be affected.')) return;
+  S.goals = S.goals.filter(g => g.id !== id);
+  saveData();
+  updateCats();
+  render();
+}
+
+// ── Stats ──────────────────────────────────────────────
+function getStats() {
+  const income = S.tx.filter(x => x.type === 'income').reduce((s, x) => s + x.amt, 0);
+  const expenses = S.tx.filter(x => x.type === 'expense').reduce((s, x) => s + Math.abs(x.amt), 0);
+  const debtPaid = S.tx.filter(x => x.type === 'debt').reduce((s, x) => s + Math.abs(x.amt), 0);
+  const goalFunded = S.tx.filter(x => x.type === 'goal').reduce((s, x) => s + Math.abs(x.amt), 0);
+  const totalOut = expenses + debtPaid + goalFunded;
+  const net = income - totalOut;
+  const savingsRate = income > 0 ? Math.round((income - totalOut) / income * 100) : 0;
+  const totDRem = S.debt.reduce((s, d) => s + d.rem, 0);
+  const totDOrig = S.debt.reduce((s, d) => s + d.total, 0);
+  const totDPaid = totDOrig - totDRem;
+  const totGSaved = S.goals.reduce((s, g) => s + g.saved, 0);
+  return { income, expenses, debtPaid, goalFunded, totalOut, net, savingsRate, totDRem, totDOrig, totDPaid, totGSaved };
+}
+
+function srTag(sr) {
+  if (sr >= 20) return `<span class="tag tag-good">Healthy</span>`;
+  if (sr >= 5) return `<span class="tag tag-warn">Fair</span>`;
+  return `<span class="tag tag-bad">Low</span>`;
+}
+
+function typeBadge(t) {
+  return { income:'<span class="badge bi">income</span>', expense:'<span class="badge be">expense</span>',
+    debt:'<span class="badge bd">debt</span>', goal:'<span class="badge bgoal">goal</span>' }[t] || '';
+}
+
+// ── Render: Home ───────────────────────────────────────
+function renderHome() {
+  const s = getStats();
+  const greet = el('h-greeting');
+  if (CFG.name) {
+    greet.innerHTML = `<div style="font-size:24px;font-weight:600;color:var(--text-primary);margin-bottom:20px;letter-spacing:-0.4px">Hey, ${CFG.name}</div>`;
+    el('app-subtitle').textContent = 'Your money, at a glance';
+  } else {
+    greet.innerHTML = '';
+    el('app-subtitle').textContent = 'Your money, at a glance';
+  }
+
+  const nc = s.net >= 0 ? 'cg' : 'cr';
+  let m = `
+    <div class="mc"><div class="mc-label">Income</div><div class="mc-val cg">${fmt(s.income)}</div></div>
+    <div class="mc"><div class="mc-label">Spending</div><div class="mc-val cr">${fmt(s.totalOut)}</div><div class="mc-sub">all outgoing</div></div>
+    <div class="mc"><div class="mc-label">Net cash</div><div class="mc-val ${nc}">${s.net >= 0 ? '+' : ''}${fmt(s.net)}</div></div>
+    <div class="mc"><div class="mc-label">Debt left</div><div class="mc-val cr">${fmt(s.totDRem)}</div></div>
+    <div class="mc"><div class="mc-label">Goal savings</div><div class="mc-val cb">${fmt(s.totGSaved)}</div></div>
+  `;
+  if (CFG.togSr) m += `<div class="mc"><div class="mc-label">Savings rate</div><div class="mc-val">${s.savingsRate}%</div><div class="mc-sub">${srTag(s.savingsRate)}</div></div>`;
+  el('h-metrics').innerHTML = m;
+
+  let sections = [];
+
+  if (CFG.togCh && s.totalOut > 0) {
+    const slices = [
+      { l:'Expenses', v:s.expenses, col:'#888780' },
+      { l:'Debt payments', v:s.debtPaid, col:'#D85A30' },
+      { l:'Goal funding', v:s.goalFunded, col:'#378ADD' },
+    ].filter(x => x.v > 0);
+    const total = slices.reduce((a, x) => a + x.v, 0);
+    let ca = -Math.PI / 2, paths = '';
+    slices.forEach(sl => {
+      const a = (sl.v / total) * 2 * Math.PI;
+      if (slices.length === 1) {
+        paths += `<circle cx="50" cy="50" r="42" fill="${sl.col}"/>`;
+      } else {
+        const x1 = (50 + 42 * Math.cos(ca)).toFixed(2), y1 = (50 + 42 * Math.sin(ca)).toFixed(2);
+        const x2 = (50 + 42 * Math.cos(ca + a)).toFixed(2), y2 = (50 + 42 * Math.sin(ca + a)).toFixed(2);
+        paths += `<path d="M50,50 L${x1},${y1} A42,42 0 ${a > Math.PI ? 1 : 0},1 ${x2},${y2} Z" fill="${sl.col}"/>`;
+      }
+      ca += a;
+    });
+    const leg = slices.map(sl => `<div class="leg-item"><div class="leg-dot" style="background:${sl.col}"></div>${sl.l}<span class="leg-pct">${Math.round(sl.v/total*100)}%</span></div>`).join('');
+    sections.push(`<div class="card"><div class="card-head"><div class="card-title">Where money goes</div></div><div class="donut-row"><svg viewBox="0 0 100 100" width="100" height="100" style="flex-shrink:0">${paths}<circle cx="50" cy="50" r="24" fill="var(--bg-primary)"/></svg><div class="leg">${leg}</div></div></div>`);
+  }
+
+  if (CFG.togDh && S.debt.length) {
+    const rows = S.debt.map(d => {
+      const p = pct(d.total - d.rem, d.total);
+      return `<div class="item-row"><div class="item-left"><div class="item-name">${d.name}</div><div class="bar bfg-bar"><div class="bar-fill bfg" style="width:${p}%"></div></div><div class="mc-sub" style="display:flex;justify-content:space-between"><span>${fmt(d.rem)} left</span><span>${p}% paid</span></div></div></div>`;
+    }).join('');
+    sections.push(`<div class="card"><div class="card-head"><div class="card-title">Debt payoff</div><div class="card-sub">${S.debt.length} debt${S.debt.length !== 1 ? 's' : ''}</div></div>${rows}</div>`);
+  }
+
+  if (CFG.togGh && S.goals.length) {
+    const bc = goalBarClass();
+    const rows = S.goals.map(g => {
+      const p = pct(g.saved, g.target);
+      return `<div class="item-row"><div class="item-left"><div class="item-name">${g.name}</div><div class="bar"><div class="bar-fill ${bc}" style="width:${p}%"></div></div><div class="mc-sub" style="display:flex;justify-content:space-between"><span>${fmt(g.saved)} saved</span><span>${p}% of ${fmt(g.target)}</span></div></div></div>`;
+    }).join('');
+    sections.push(`<div class="card"><div class="card-head"><div class="card-title">Goals</div><div class="card-sub">${S.goals.length} goal${S.goals.length !== 1 ? 's' : ''}</div></div>${rows}</div>`);
+  }
+
+  const hb = el('h-body');
+  if (!sections.length) hb.innerHTML = '';
+  else if (sections.length === 1) hb.innerHTML = sections[0];
+  else hb.innerHTML = `<div class="two-col">${sections.join('')}</div>`;
+}
+
+// ── Render: Transactions ───────────────────────────────
+function renderTx() {
+  const s = getStats();
+  el('tx-metrics').innerHTML = `
+    <div class="mc"><div class="mc-label">Income</div><div class="mc-val cg">${fmt(s.income)}</div></div>
+    <div class="mc"><div class="mc-label">Expenses</div><div class="mc-val cr">${fmt(s.expenses)}</div></div>
+    <div class="mc"><div class="mc-label">Debt remaining</div><div class="mc-val cr">${fmt(s.totDRem)}</div><div class="mc-sub">${fmt(s.totDPaid)} paid off</div></div>
+    <div class="mc"><div class="mc-label">Total saved</div><div class="mc-val cb">${fmt(s.totGSaved)}</div></div>
+  `;
+  el('tx-count').textContent = `${S.tx.length} record${S.tx.length !== 1 ? 's' : ''}`;
+  const body = el('tx-body');
+  if (!S.tx.length) {
+    body.innerHTML = '<tr><td colspan="5"><div class="empty-state"><strong>No transactions yet</strong>Use the form above to log your first one.</div></td></tr>';
+    return;
+  }
+  body.innerHTML = [...S.tx].reverse().map(tx => `<tr>
+    <td class="col-desc" title="${tx.desc}" style="font-weight:500">${tx.desc}</td>
+    <td class="col-type">${typeBadge(tx.type)}</td>
+    <td class="col-cat" style="color:var(--text-secondary)">${tx.cat}</td>
+    <td class="col-amt ${tx.amt >= 0 ? 'ap' : 'an'}">${tx.amt >= 0 ? '+' : ''}${fmt(tx.amt)}</td>
+    <td class="col-del"><button class="btn-del" onclick="delTx(${tx.id})" title="Remove">✕</button></td>
+  </tr>`).join('');
+}
+
+// ── Render: Debts ──────────────────────────────────────
+function renderDebts() {
+  const totRem = S.debt.reduce((s, d) => s + d.rem, 0);
+  const totOrig = S.debt.reduce((s, d) => s + d.total, 0);
+  const totPaid = totOrig - totRem;
+  el('d-metrics').innerHTML = `
+    <div class="mc"><div class="mc-label">Remaining</div><div class="mc-val cr">${fmt(totRem)}</div></div>
+    <div class="mc"><div class="mc-label">Paid off</div><div class="mc-val cg">${fmt(totPaid)}</div></div>
+    <div class="mc"><div class="mc-label">Progress</div><div class="mc-val">${pct(totPaid, totOrig)}%</div></div>
+    <div class="mc"><div class="mc-label">Debts</div><div class="mc-val">${S.debt.length}</div></div>
+  `;
+  const cards = el('d-cards');
+  if (!S.debt.length) {
+    cards.innerHTML = `<div class="card"><div class="empty-state"><strong>No debts added yet</strong>Use the form below to start tracking.</div></div>`;
+    return;
+  }
+  cards.innerHTML = S.debt.map(d => {
+    const paid = d.total - d.rem;
+    const p = pct(paid, d.total);
+    const txs = S.tx.filter(t => t.type === 'debt' && t.tid === d.id);
+    const totalPaidTx = txs.reduce((s, t) => s + Math.abs(t.amt), 0);
+    const avg = txs.length > 0 ? Math.round(totalPaidTx / txs.length) : 0;
+    const ml = avg > 0 ? Math.ceil(d.rem / avg) : null;
+    return `<div class="card">
+      <div class="card-head">
+        <div><div class="card-title">${d.name}</div><div class="card-sub">${p}% paid off</div></div>
+        <button class="btn-del" onclick="delDebt(${d.id})" title="Delete debt">✕</button>
+      </div>
+      <div class="bar bar-thick"><div class="bar-fill bfg" style="width:${p}%"></div></div>
+      <div class="prog-labels"><span>${fmt(paid)} paid</span><span>${fmt(d.rem)} remaining</span></div>
+      <div class="detail-grid">
+        <div class="dc"><div class="dc-label">Original</div><div class="dc-val">${fmt(d.total)}</div></div>
+        <div class="dc"><div class="dc-label">Remaining</div><div class="dc-val cr">${fmt(d.rem)}</div></div>
+        <div class="dc"><div class="dc-label">Payments logged</div><div class="dc-val">${txs.length}</div></div>
+        <div class="dc"><div class="dc-label">Avg payment</div><div class="dc-val">${avg > 0 ? fmt(avg) : '—'}</div></div>
+        <div class="dc"><div class="dc-label">Est. months left</div><div class="dc-val">${ml !== null ? ml : '—'}</div></div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ── Render: Goals ──────────────────────────────────────
+function renderGoals() {
+  const bc = goalBarClass();
+  const tc = goalTextClass();
+  const totT = S.goals.reduce((s, g) => s + g.target, 0);
+  const totS = S.goals.reduce((s, g) => s + g.saved, 0);
+  el('g-metrics').innerHTML = `
+    <div class="mc"><div class="mc-label">Target</div><div class="mc-val">${fmt(totT)}</div></div>
+    <div class="mc"><div class="mc-label">Saved</div><div class="mc-val ${tc}">${fmt(totS)}</div></div>
+    <div class="mc"><div class="mc-label">Still needed</div><div class="mc-val">${fmt(Math.max(0, totT - totS))}</div></div>
+    <div class="mc"><div class="mc-label">Goals</div><div class="mc-val">${S.goals.length}</div></div>
+  `;
+  const cards = el('g-cards');
+  if (!S.goals.length) {
+    cards.innerHTML = `<div class="card"><div class="empty-state"><strong>No goals added yet</strong>Use the form below to start saving toward something.</div></div>`;
+    return;
+  }
+  cards.innerHTML = S.goals.map(g => {
+    const p = pct(g.saved, g.target);
+    const txs = S.tx.filter(t => t.type === 'goal' && t.tid === g.id);
+    const totalFunded = txs.reduce((s, t) => s + Math.abs(t.amt), 0);
+    const avg = txs.length > 0 ? Math.round(totalFunded / txs.length) : 0;
+    const ml = avg > 0 ? Math.ceil((g.target - g.saved) / avg) : null;
+    return `<div class="card">
+      <div class="card-head">
+        <div><div class="card-title">${g.name}</div><div class="card-sub">${p}% complete</div></div>
+        <button class="btn-del" onclick="delGoal(${g.id})" title="Delete goal">✕</button>
+      </div>
+      <div class="bar bar-thick"><div class="bar-fill ${bc}" style="width:${p}%"></div></div>
+      <div class="prog-labels"><span>${fmt(g.saved)} saved</span><span>${fmt(g.target)} target</span></div>
+      <div class="detail-grid">
+        <div class="dc"><div class="dc-label">Still needed</div><div class="dc-val">${fmt(Math.max(0, g.target - g.saved))}</div></div>
+        <div class="dc"><div class="dc-label">Contributions</div><div class="dc-val">${txs.length}</div></div>
+        <div class="dc"><div class="dc-label">Avg contribution</div><div class="dc-val">${avg > 0 ? fmt(avg) : '—'}</div></div>
+        <div class="dc"><div class="dc-label">Est. months left</div><div class="dc-val">${ml !== null ? ml : '—'}</div></div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function render() { renderHome(); renderTx(); renderDebts(); renderGoals(); }
+
+// ── Boot ───────────────────────────────────────────────
+loadData();
+syncSettingsUI();
+updateCats();
+render();
+</script>
+</body>
+</html>
